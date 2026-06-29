@@ -1,9 +1,10 @@
 import { Feather } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
+import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  ActivityIndicator,
   Platform,
   RefreshControl,
   ScrollView,
@@ -12,6 +13,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -20,6 +22,8 @@ import { CategoryFilter } from "@/components/CategoryFilter";
 import { useCart } from "@/context/CartContext";
 import { useColors } from "@/hooks/useColors";
 import { api } from "@/services/base44";
+
+const logoSource = require("@/assets/images/logo.jpg");
 
 export default function HomeScreen() {
   const colors = useColors();
@@ -37,60 +41,19 @@ export default function HomeScreen() {
   const filtered = searchQuery.trim()
     ? businesses.filter((b) =>
         b.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        b.category.toLowerCase().includes(searchQuery.toLowerCase())
+        b.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (b.description ?? "").toLowerCase().includes(searchQuery.toLowerCase())
       )
     : businesses;
 
-  const topPad = Platform.OS === "web" ? 67 : insets.top;
-  const botPad = Platform.OS === "web" ? 34 + 84 : 84;
+  const topPad = Platform.OS === "web" ? 0 : insets.top;
+  const botPad = Platform.OS === "web" ? 34 + 84 : insets.bottom + 84;
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
-      <View style={[styles.header, { paddingTop: topPad + 12, backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-        <View style={styles.headerTop}>
-          <View>
-            <Text style={[styles.brand, { color: colors.primary }]}>TiliGo</Text>
-            <Text style={[styles.tagline, { color: colors.mutedForeground }]}>Dërgesa më e shpejtë</Text>
-          </View>
-          <TouchableOpacity
-            style={[styles.cartBtn, { backgroundColor: colors.primary }]}
-            onPress={() => router.push("/cart" as never)}
-            activeOpacity={0.85}
-          >
-            <Feather name="shopping-bag" size={20} color="#fff" />
-            {totalItems > 0 && (
-              <View style={[styles.cartBadge, { backgroundColor: "#fff" }]}>
-                <Text style={[styles.cartBadgeText, { color: colors.primary }]}>{totalItems}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        </View>
-
-        {/* Search bar */}
-        <View style={[styles.searchBar, { backgroundColor: colors.muted, borderColor: colors.border }]}>
-          <Feather name="search" size={16} color={colors.mutedForeground} />
-          <TextInput
-            style={[styles.searchInput, { color: colors.foreground }]}
-            placeholder="Kërko restorante, produkte..."
-            placeholderTextColor={colors.mutedForeground}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            returnKeyType="search"
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery("")}>
-              <Feather name="x" size={16} color={colors.mutedForeground} />
-            </TouchableOpacity>
-          )}
-        </View>
-
-        <CategoryFilter selected={selectedCategory} onSelect={setSelectedCategory} />
-      </View>
-
       <ScrollView
-        contentContainerStyle={[styles.list, { paddingBottom: botPad }]}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: botPad }}
         refreshControl={
           <RefreshControl
             refreshing={isRefetching}
@@ -99,35 +62,118 @@ export default function HomeScreen() {
             colors={[colors.primary]}
           />
         }
+        stickyHeaderIndices={[1]}
       >
-        {isLoading ? (
-          <View style={styles.center}>
-            <ActivityIndicator size="large" color={colors.primary} />
-          </View>
-        ) : filtered.length === 0 ? (
-          <View style={styles.empty}>
-            <Feather name="search" size={40} color={colors.mutedForeground} />
-            <Text style={[styles.emptyTitle, { color: colors.foreground }]}>Nuk u gjetën dyqane</Text>
-            <Text style={[styles.emptyDesc, { color: colors.mutedForeground }]}>
-              {searchQuery ? "Provo me fjalë tjera" : "Nuk ka dyqane aktive në këtë kategori"}
-            </Text>
-          </View>
-        ) : (
-          <>
-            <View style={styles.sectionHeader}>
-              <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-                Dyqane{" "}
-                <Text style={{ color: colors.primary }}>
-                  {selectedCategory ? `· ${selectedCategory}` : "të Hapura"}
-                </Text>
-              </Text>
-              <Text style={[styles.count, { color: colors.mutedForeground }]}>({filtered.length})</Text>
+        {/* HERO SECTION */}
+        <LinearGradient
+          colors={["#15803D", "#22C55E", "#4ADE80"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.hero, { paddingTop: topPad + 20 }]}
+        >
+          {/* Top row: logo + cart */}
+          <View style={styles.heroTop}>
+            <View style={styles.logoRow}>
+              <View style={styles.logoWrapper}>
+                <Image source={logoSource} style={styles.logoImg} contentFit="contain" />
+              </View>
+              <View>
+                <Text style={styles.brandName}>TiliGo</Text>
+                <Text style={styles.brandSub}>Dërgesa në Kosovë 🇽🇰</Text>
+              </View>
             </View>
-            {filtered.map((b) => (
-              <BusinessCard key={b.id} business={b} />
-            ))}
-          </>
-        )}
+            <TouchableOpacity
+              style={styles.cartBtn}
+              onPress={() => router.push("/cart" as never)}
+              activeOpacity={0.85}
+            >
+              <Feather name="shopping-bag" size={20} color={colors.primary} />
+              {totalItems > 0 && (
+                <View style={[styles.cartBadge, { backgroundColor: colors.primary }]}>
+                  <Text style={styles.cartBadgeText}>{totalItems > 9 ? "9+" : totalItems}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          {/* Headline */}
+          <View style={styles.heroCenter}>
+            <Text style={styles.heroHeadline}>
+              TiliGo —{" "}
+              <Text style={{ color: "#F0FDF4" }}>Shpejt</Text>
+              {", me Dashuri"}
+            </Text>
+            <Text style={styles.heroSub}>Dërgesa më e shpejtë në Kosovë 🇽🇰</Text>
+          </View>
+
+          {/* Search bar inside hero */}
+          <View style={[styles.searchBar, { backgroundColor: "#fff" }]}>
+            <Feather name="search" size={17} color="#94A3B8" />
+            <TextInput
+              style={[styles.searchInput, { color: colors.foreground }]}
+              placeholder="Kërko restorante, produkte..."
+              placeholderTextColor="#94A3B8"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              returnKeyType="search"
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery("")}>
+                <Feather name="x" size={16} color="#94A3B8" />
+              </TouchableOpacity>
+            )}
+          </View>
+        </LinearGradient>
+
+        {/* STICKY CATEGORY ROW */}
+        <View style={[styles.catSection, { backgroundColor: colors.background }]}>
+          <View style={[styles.catHeader, { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 4 }]}>
+            <Text style={[styles.catTitle, { color: colors.primary }]}>Kategoritë</Text>
+            <Text style={[styles.catTitle, { color: colors.foreground }]}> Popullore</Text>
+          </View>
+          <CategoryFilter selected={selectedCategory} onSelect={setSelectedCategory} />
+        </View>
+
+        {/* BUSINESS LISTINGS */}
+        <View style={{ paddingHorizontal: 16, paddingTop: 8 }}>
+          {isLoading ? (
+            <View style={styles.center}>
+              <ActivityIndicator size="large" color={colors.primary} />
+              <Text style={[styles.loadingText, { color: colors.mutedForeground }]}>
+                Duke ngarkuar dyqanet...
+              </Text>
+            </View>
+          ) : filtered.length === 0 ? (
+            <View style={styles.empty}>
+              <Feather name="search" size={44} color={colors.mutedForeground} />
+              <Text style={[styles.emptyTitle, { color: colors.foreground }]}>
+                {searchQuery ? "Nuk u gjetën dyqane" : "Nuk ka dyqane aktive"}
+              </Text>
+              <Text style={[styles.emptyDesc, { color: colors.mutedForeground }]}>
+                {searchQuery ? "Provo me fjalë tjera" : "Provo me kategori tjetër"}
+              </Text>
+            </View>
+          ) : (
+            <>
+              <View style={styles.sectionHeader}>
+                <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+                  {"Dyqane "}
+                  <Text style={{ color: colors.primary }}>
+                    {selectedCategory ? `· ${selectedCategory}` : "të Hapura"}
+                  </Text>
+                </Text>
+                <View style={[styles.countBadge, { backgroundColor: colors.accent }]}>
+                  <Text style={[styles.countText, { color: colors.primaryDark }]}>
+                    {filtered.length}
+                  </Text>
+                </View>
+              </View>
+              {filtered.map((b) => (
+                <BusinessCard key={b.id} business={b} />
+              ))}
+            </>
+          )}
+        </View>
       </ScrollView>
     </View>
   );
@@ -135,23 +181,29 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: {
-    borderBottomWidth: 1,
-    paddingBottom: 4,
+  hero: {
+    paddingHorizontal: 20,
+    paddingBottom: 28,
+    gap: 16,
   },
-  headerTop: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    marginBottom: 12,
+  heroTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  logoRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  logoWrapper: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: "#fff",
+    overflow: "hidden",
+    padding: 2,
   },
-  brand: { fontSize: 24, fontWeight: "800", letterSpacing: -0.5 },
-  tagline: { fontSize: 12, marginTop: 1 },
+  logoImg: { width: "100%", height: "100%" },
+  brandName: { color: "#fff", fontSize: 20, fontWeight: "800", letterSpacing: -0.3 },
+  brandSub: { color: "rgba(255,255,255,0.85)", fontSize: 11, marginTop: 1 },
   cartBtn: {
     width: 44,
     height: 44,
     borderRadius: 22,
+    backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -159,32 +211,49 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: -4,
     right: -4,
-    minWidth: 16,
-    height: 16,
-    borderRadius: 8,
+    minWidth: 17,
+    height: 17,
+    borderRadius: 9,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 3,
+    borderWidth: 2,
+    borderColor: "#fff",
   },
-  cartBadgeText: { fontSize: 10, fontWeight: "800" },
+  cartBadgeText: { color: "#fff", fontSize: 10, fontWeight: "800" },
+  heroCenter: { alignItems: "center", gap: 6 },
+  heroHeadline: { color: "#fff", fontSize: 22, fontWeight: "800", textAlign: "center", letterSpacing: -0.3 },
+  heroSub: { color: "rgba(255,255,255,0.9)", fontSize: 14, textAlign: "center" },
   searchBar: {
     flexDirection: "row",
     alignItems: "center",
-    marginHorizontal: 16,
-    marginBottom: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 12,
-    borderWidth: 1,
-    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+    borderRadius: 14,
+    gap: 10,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
   },
-  searchInput: { flex: 1, fontSize: 14 },
-  list: { padding: 16 },
-  sectionHeader: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 16 },
+  searchInput: { flex: 1, fontSize: 15 },
+  catSection: {},
+  catHeader: { flexDirection: "row" },
+  catTitle: { fontSize: 16, fontWeight: "700" },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 14,
+    marginTop: 4,
+  },
   sectionTitle: { fontSize: 18, fontWeight: "700" },
-  count: { fontSize: 14, fontWeight: "500" },
-  center: { flex: 1, alignItems: "center", justifyContent: "center", paddingTop: 80 },
-  empty: { alignItems: "center", justifyContent: "center", paddingTop: 60, gap: 12 },
+  countBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 },
+  countText: { fontSize: 13, fontWeight: "700" },
+  center: { alignItems: "center", justifyContent: "center", paddingTop: 60, gap: 12 },
+  loadingText: { fontSize: 14 },
+  empty: { alignItems: "center", justifyContent: "center", paddingTop: 60, gap: 10 },
   emptyTitle: { fontSize: 18, fontWeight: "700" },
   emptyDesc: { fontSize: 14, textAlign: "center" },
 });

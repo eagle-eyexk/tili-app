@@ -1,0 +1,1 @@
+- [TiliGo mobile app](tiligo-mobile.md) — Expo app at artifacts/mobile, base44 API, Albanian language, real logo at assets/images/logo.jpg

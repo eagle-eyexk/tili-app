@@ -1,5 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
+import { Image } from "expo-image";
 import React from "react";
 import {
   ActivityIndicator,
@@ -17,6 +18,8 @@ import { useGuest } from "@/context/GuestContext";
 import { useColors } from "@/hooks/useColors";
 import { api } from "@/services/base44";
 
+const logoSource = require("@/assets/images/logo.jpg");
+
 export default function OrdersScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -26,15 +29,28 @@ export default function OrdersScreen() {
     queryKey: ["orders", guestId],
     queryFn: () => (guestId ? api.orders.list(guestId) : Promise.resolve([])),
     enabled: !!guestId,
+    refetchInterval: 30_000,
   });
 
-  const topPad = Platform.OS === "web" ? 67 : insets.top;
-  const botPad = Platform.OS === "web" ? 34 + 84 : 84;
+  const topPad = Platform.OS === "web" ? 0 : insets.top;
+  const botPad = Platform.OS === "web" ? 34 + 84 : insets.bottom + 84;
+
+  const activeOrders = orders.filter((o) =>
+    ["placed", "accepted", "ready", "assigned", "active"].includes(o.status)
+  );
+  const pastOrders = orders.filter((o) =>
+    !["placed", "accepted", "ready", "assigned", "active"].includes(o.status)
+  );
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { paddingTop: topPad + 12, backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-        <Text style={[styles.title, { color: colors.foreground }]}>Porositë Mia</Text>
+      <View style={[styles.header, { paddingTop: topPad + 14, backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+        <View style={styles.logoRow}>
+          <View style={[styles.logoWrap, { borderColor: colors.border }]}>
+            <Image source={logoSource} style={styles.logo} contentFit="contain" />
+          </View>
+          <Text style={[styles.title, { color: colors.foreground }]}>Porositë Mia</Text>
+        </View>
       </View>
 
       <ScrollView
@@ -55,14 +71,40 @@ export default function OrdersScreen() {
           </View>
         ) : orders.length === 0 ? (
           <View style={styles.empty}>
-            <Feather name="clock" size={48} color={colors.mutedForeground} />
+            <View style={[styles.emptyIcon, { backgroundColor: colors.accent }]}>
+              <Feather name="clock" size={36} color={colors.primary} />
+            </View>
             <Text style={[styles.emptyTitle, { color: colors.foreground }]}>Nuk keni porosi</Text>
             <Text style={[styles.emptyDesc, { color: colors.mutedForeground }]}>
-              Porositë tuaja do të shfaqen këtu
+              Porositë tuaja nga TiliGo do të shfaqen këtu
             </Text>
           </View>
         ) : (
-          orders.map((order) => <OrderCard key={order.id} order={order} />)
+          <>
+            {activeOrders.length > 0 && (
+              <>
+                <View style={styles.sectionHeader}>
+                  <View style={[styles.activeDot, { backgroundColor: colors.primary }]} />
+                  <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Aktive</Text>
+                </View>
+                {activeOrders.map((o) => (
+                  <OrderCard key={o.id} order={o} />
+                ))}
+              </>
+            )}
+            {pastOrders.length > 0 && (
+              <>
+                <View style={styles.sectionHeader}>
+                  <Text style={[styles.sectionTitle, { color: colors.mutedForeground }]}>
+                    Të kaluara
+                  </Text>
+                </View>
+                {pastOrders.map((o) => (
+                  <OrderCard key={o.id} order={o} />
+                ))}
+              </>
+            )}
+          </>
         )}
       </ScrollView>
     </View>
@@ -71,15 +113,18 @@ export default function OrdersScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: {
-    borderBottomWidth: 1,
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-  },
-  title: { fontSize: 24, fontWeight: "800" },
+  header: { borderBottomWidth: 1, paddingHorizontal: 16, paddingBottom: 16 },
+  logoRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  logoWrap: { width: 36, height: 36, borderRadius: 10, borderWidth: 1, overflow: "hidden", padding: 2 },
+  logo: { width: "100%", height: "100%" },
+  title: { fontSize: 22, fontWeight: "800" },
   list: { padding: 16 },
-  center: { flex: 1, alignItems: "center", justifyContent: "center", paddingTop: 80 },
-  empty: { alignItems: "center", justifyContent: "center", paddingTop: 80, gap: 12 },
-  emptyTitle: { fontSize: 18, fontWeight: "700" },
-  emptyDesc: { fontSize: 14, textAlign: "center", paddingHorizontal: 40 },
+  center: { alignItems: "center", justifyContent: "center", paddingTop: 80 },
+  empty: { alignItems: "center", justifyContent: "center", paddingTop: 80, gap: 14 },
+  emptyIcon: { width: 80, height: 80, borderRadius: 40, alignItems: "center", justifyContent: "center" },
+  emptyTitle: { fontSize: 20, fontWeight: "700" },
+  emptyDesc: { fontSize: 14, textAlign: "center", paddingHorizontal: 40, lineHeight: 20 },
+  sectionHeader: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 12, marginTop: 4 },
+  activeDot: { width: 8, height: 8, borderRadius: 4 },
+  sectionTitle: { fontSize: 15, fontWeight: "700" },
 });

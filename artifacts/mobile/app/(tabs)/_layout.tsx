@@ -21,10 +21,18 @@ export default function TabLayout() {
           borderTopWidth: 1,
           borderTopColor: colors.border,
           elevation: 0,
+          height: isIOS ? 84 : 64,
+          paddingBottom: isIOS ? 28 : 8,
+          paddingTop: 8,
+        },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: "600",
+          marginTop: 2,
         },
         tabBarBackground: () =>
           isIOS ? (
-            <BlurView intensity={95} tint="light" style={StyleSheet.absoluteFill} />
+            <BlurView intensity={80} tint="light" style={StyleSheet.absoluteFill} />
           ) : (
             <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.card }]} />
           ),
@@ -34,7 +42,9 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: ({ color }) => <Feather name="home" size={22} color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <Feather name={focused ? "home" : "home"} size={22} color={color} />
+          ),
         }}
       />
       <Tabs.Screen

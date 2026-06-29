@@ -1,18 +1,18 @@
 import React from "react";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, StyleSheet, Text, TouchableOpacity } from "react-native";
 
 import { useColors } from "@/hooks/useColors";
 
-const CATEGORIES = [
-  { id: null, label: "Të gjitha" },
-  { id: "Pica", label: "Pica" },
-  { id: "Burgera", label: "Burgera" },
-  { id: "Sushi", label: "Sushi" },
-  { id: "Supermarket", label: "Supermarket" },
-  { id: "Farmaci", label: "Farmaci" },
-  { id: "Kafe", label: "Kafe" },
-  { id: "Ushqim", label: "Ushqim" },
-  { id: "Restorante", label: "Restorante" },
+export const CATEGORIES = [
+  { id: null, label: "Të gjitha", emoji: "🏠" },
+  { id: "Pica", label: "Pica", emoji: "🍕" },
+  { id: "Burgera", label: "Burgera", emoji: "🍔" },
+  { id: "Sushi", label: "Sushi", emoji: "🍣" },
+  { id: "Supermarket", label: "Supermarket", emoji: "🛒" },
+  { id: "Farmaci", label: "Farmaci", emoji: "💊" },
+  { id: "Kafe", label: "Kafe", emoji: "☕" },
+  { id: "Ushqim", label: "Ushqim", emoji: "🍽️" },
+  { id: "Restorante", label: "Restorante", emoji: "🏪" },
 ];
 
 interface Props {
@@ -39,11 +39,17 @@ export function CategoryFilter({ selected, onSelect }: Props) {
               {
                 backgroundColor: active ? colors.primary : colors.card,
                 borderColor: active ? colors.primary : colors.border,
+                shadowColor: active ? colors.primary : "#000",
+                shadowOpacity: active ? 0.3 : 0.06,
+                shadowRadius: active ? 6 : 3,
+                shadowOffset: { width: 0, height: active ? 2 : 1 },
+                elevation: active ? 4 : 1,
               },
             ]}
             onPress={() => onSelect(cat.id)}
             activeOpacity={0.75}
           >
+            <Text style={styles.emoji}>{cat.emoji}</Text>
             <Text
               style={[
                 styles.label,
@@ -62,10 +68,14 @@ export function CategoryFilter({ selected, onSelect }: Props) {
 const styles = StyleSheet.create({
   container: { paddingHorizontal: 16, paddingVertical: 12, gap: 8, flexDirection: "row" },
   pill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
     paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingVertical: 9,
+    borderRadius: 50,
     borderWidth: 1,
   },
+  emoji: { fontSize: 14 },
   label: { fontSize: 13, fontWeight: "600" },
 });

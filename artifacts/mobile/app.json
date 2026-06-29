@@ -4,21 +4,48 @@
     "slug": "mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "mobile",
-    "userInterfaceStyle": "automatic",
+    "icon": "./assets/images/logo.jpg",
+    "scheme": "tiligo",
+    "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/icon.png",
+      "image": "./assets/images/logo.jpg",
       "resizeMode": "contain",
-      "backgroundColor": "#22C55E"
+      "backgroundColor": "#FFFFFF"
     },
     "ios": {
-      "supportsTablet": false
+      "supportsTablet": false,
+      "bundleIdentifier": "com.tiligo.delivery",
+      "buildNumber": "1",
+      "deploymentTarget": "16.0",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "TiliGo ka nevojë për vendndodhjen tuaj për të gjetur dyqanet dhe korrierin afër jush.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "TiliGo ka nevojë për vendndodhjen tuaj gjatë gjurmimit të dërgimit.",
+        "NSCameraUsageDescription": "TiliGo ka nevojë për kamerën tuaj për foton e profilit.",
+        "NSPhotoLibraryUsageDescription": "TiliGo ka nevojë për akses në fotot tuaja për profilin.",
+        "NSPhotoLibraryAddUsageDescription": "TiliGo ka nevojë të ruajë fotografi.",
+        "CFBundleAllowMixedLocalizations": true,
+        "CFBundleDevelopmentRegion": "sq",
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
-    "android": {},
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/logo.jpg",
+        "backgroundColor": "#FFFFFF"
+      },
+      "package": "com.tiligo.delivery",
+      "versionCode": 1,
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE"
+      ]
+    },
     "web": {
-      "favicon": "./assets/images/icon.png"
+      "favicon": "./assets/images/logo.jpg",
+      "bundler": "metro"
     },
     "plugins": [
       [
@@ -28,7 +55,13 @@
         }
       ],
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "TiliGo ka nevojë për vendndodhjen tuaj."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
