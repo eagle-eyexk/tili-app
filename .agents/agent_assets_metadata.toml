@@ -1,0 +1,38 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "TrMw6FepTdK12i1VxH-rV"
+uri = "file://artifacts/mobile/assets/images/icon.png"
+type = "image"
+title = "tiligo app icon"
+
+[[generated]]
+id = "IIMPwKEmuyC5QdUvZ1LNU"
+uri = "file://artifacts/mobile/assets/images/category_pizza.png"
+type = "image"
+title = "pizza category"
+
+[[generated]]
+id = "T4yby76JnhaYyzo7-_QYK"
+uri = "file://artifacts/mobile/assets/images/category_burger.png"
+type = "image"
+title = "burger category"
+
+[[generated]]
+id = "qe2otAJehZdL6hr6P2CxH"
+uri = "file://artifacts/mobile/assets/images/category_sushi.png"
+type = "image"
+title = "sushi category"
+
+[[generated]]
+id = "YP_s4QYH4na7B06nXo6mT"
+uri = "file://artifacts/mobile/assets/images/category_supermarket.png"
+type = "image"
+title = "supermarket category"
+
+[[generated]]
+id = "bkhSLnXL-O8_tOoxx2uYz"
+uri = "file://artifacts/mobile/assets/images/category_coffee.png"
+type = "image"
+title = "coffee category"
