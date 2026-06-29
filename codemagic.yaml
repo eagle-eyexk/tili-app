@@ -1,0 +1,266 @@
+workflows:
+
+  # ─────────────────────────────────────────────────────────────
+  # iOS – Build, sign and submit to TestFlight / App Store
+  # ─────────────────────────────────────────────────────────────
+  tiligo-ios-release:
+    name: "TiliGo iOS – Release to TestFlight"
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+
+    environment:
+      groups:
+        # Add these variable groups in the Codemagic UI:
+        #   app_store_credentials → APP_STORE_CONNECT_KEY_ID,
+        #                           APP_STORE_CONNECT_ISSUER_ID,
+        #                           APP_STORE_CONNECT_PRIVATE_KEY (base64 .p8)
+        #   ios_signing            → CERTIFICATE_PRIVATE_KEY (base64),
+        #                           PROVISIONING_PROFILE (base64)
+        - app_store_credentials
+        - ios_signing
+      vars:
+        BUNDLE_ID: "com.tiligo.delivery"
+        APP_NAME: "TiliGo"
+      node: latest
+      xcode: latest
+      cocoapods: default
+
+    triggering:
+      events:
+        - push
+        - tag
+      branch_patterns:
+        - pattern: "main"
+          include: true
+      tag_patterns:
+        - pattern: "v*"
+          include: true
+
+    cache:
+      cache_paths:
+        - $HOME/.npm
+        - $HOME/.pnpm-store
+        - $CM_BUILD_DIR/artifacts/mobile/ios/Pods
+        - $CM_BUILD_DIR/artifacts/mobile/node_modules
+
+    scripts:
+      - name: Install pnpm
+        script: |
+          npm install -g pnpm@latest
+          echo "pnpm $(pnpm --version)"
+
+      - name: Install workspace dependencies
+        script: |
+          pnpm install --frozen-lockfile
+
+      - name: Install Expo CLI
+        script: |
+          npm install -g expo-cli@latest
+
+      - name: Set up keychain & provisioning
+        script: |
+          keychain initialize
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --create
+          keychain add-certificates
+          xcode-project use-profiles
+
+      - name: Expo Prebuild (generate native iOS project)
+        script: |
+          cd artifacts/mobile
+          npx expo prebuild --clean --platform ios \
+            --no-install
+
+      - name: Install CocoaPods
+        script: |
+          cd artifacts/mobile/ios
+          pod install
+
+      - name: Build & export IPA
+        script: |
+          cd artifacts/mobile
+          xcode-project build-ipa \
+            --workspace ios/mobile.xcworkspace \
+            --scheme mobile \
+            --config release \
+            --output-dir ../../build/ios
+
+    artifacts:
+      - build/ios/**/*.ipa
+      - artifacts/mobile/ios/build/**/*.dSYM
+      - /tmp/xcodebuild_logs/*.log
+
+    publishing:
+      email:
+        recipients:
+          - info@tiligo.net
+        notify:
+          success: true
+          failure: true
+      app_store_connect:
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_ID
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+        submit_to_testflight: true
+        submit_to_app_store: false          # flip to true for App Store release
+        beta_groups:
+          - "TiliGo Testers"
+        expire_build_submitted_for_review: true
+
+  # ─────────────────────────────────────────────────────────────
+  # iOS – App Store submission (production release)
+  # ─────────────────────────────────────────────────────────────
+  tiligo-ios-appstore:
+    name: "TiliGo iOS – App Store Submission"
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+
+    environment:
+      groups:
+        - app_store_credentials
+        - ios_signing
+      vars:
+        BUNDLE_ID: "com.tiligo.delivery"
+      node: latest
+      xcode: latest
+      cocoapods: default
+
+    triggering:
+      events:
+        - tag
+      tag_patterns:
+        - pattern: "release-*"
+          include: true
+
+    scripts:
+      - name: Install pnpm
+        script: npm install -g pnpm@latest
+
+      - name: Install workspace dependencies
+        script: pnpm install --frozen-lockfile
+
+      - name: Install Expo CLI
+        script: npm install -g expo-cli@latest
+
+      - name: Set up keychain & provisioning
+        script: |
+          keychain initialize
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --create
+          keychain add-certificates
+          xcode-project use-profiles
+
+      - name: Expo Prebuild
+        script: |
+          cd artifacts/mobile
+          npx expo prebuild --clean --platform ios --no-install
+
+      - name: Install CocoaPods
+        script: |
+          cd artifacts/mobile/ios
+          pod install
+
+      - name: Build & export IPA
+        script: |
+          cd artifacts/mobile
+          xcode-project build-ipa \
+            --workspace ios/mobile.xcworkspace \
+            --scheme mobile \
+            --config release \
+            --output-dir ../../build/ios
+
+    artifacts:
+      - build/ios/**/*.ipa
+      - artifacts/mobile/ios/build/**/*.dSYM
+
+    publishing:
+      app_store_connect:
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_ID
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+        submit_to_testflight: false
+        submit_to_app_store: true
+        release_type: AFTER_APPROVAL
+
+  # ─────────────────────────────────────────────────────────────
+  # Android – Build AAB and push to Google Play internal track
+  # ─────────────────────────────────────────────────────────────
+  tiligo-android-release:
+    name: "TiliGo Android – Internal Track"
+    max_build_duration: 90
+    instance_type: linux_x2
+
+    environment:
+      groups:
+        # google_play → GCLOUD_SERVICE_ACCOUNT_CREDENTIALS (JSON)
+        # android_signing → CM_KEYSTORE (base64), CM_KEYSTORE_PASSWORD,
+        #                   CM_KEY_ALIAS, CM_KEY_PASSWORD
+        - google_play
+        - android_signing
+      vars:
+        PACKAGE_NAME: "com.tiligo.delivery"
+      node: latest
+      java: 17
+
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: "main"
+          include: true
+
+    cache:
+      cache_paths:
+        - $HOME/.npm
+        - $HOME/.pnpm-store
+        - $HOME/.gradle/caches
+        - $CM_BUILD_DIR/artifacts/mobile/node_modules
+
+    scripts:
+      - name: Install pnpm
+        script: npm install -g pnpm@latest
+
+      - name: Install workspace dependencies
+        script: pnpm install --frozen-lockfile
+
+      - name: Install Expo CLI
+        script: npm install -g expo-cli@latest
+
+      - name: Set up Android signing keystore
+        script: |
+          echo $CM_KEYSTORE | base64 --decode > /tmp/keystore.jks
+          cat >> artifacts/mobile/android/gradle.properties <<EOF
+          MYAPP_UPLOAD_STORE_FILE=/tmp/keystore.jks
+          MYAPP_UPLOAD_KEY_ALIAS=$CM_KEY_ALIAS
+          MYAPP_UPLOAD_STORE_PASSWORD=$CM_KEYSTORE_PASSWORD
+          MYAPP_UPLOAD_KEY_PASSWORD=$CM_KEY_PASSWORD
+          EOF
+
+      - name: Expo Prebuild (Android)
+        script: |
+          cd artifacts/mobile
+          npx expo prebuild --clean --platform android --no-install
+
+      - name: Build Android AAB
+        script: |
+          cd artifacts/mobile/android
+          chmod +x gradlew
+          ./gradlew bundleRelease --no-daemon
+
+    artifacts:
+      - artifacts/mobile/android/app/build/outputs/**/*.aab
+      - artifacts/mobile/android/app/build/outputs/**/mapping/**/*.txt
+
+    publishing:
+      email:
+        recipients:
+          - info@tiligo.net
+        notify:
+          success: true
+          failure: true
+      google_play:
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+        track: internal
+        submit_as_draft: false
