@@ -1,0 +1,20 @@
+kind = "web"
+previewPath = "/web/"
+title = "TiliGo Web"
+version = "1.0.0"
+id = "web"
+
+[[services]]
+name = "web"
+paths = ["/web/"]
+localPort = 5173
+
+[services.development]
+run = "pnpm --filter @workspace/web run dev"
+
+[services.production]
+build = ["pnpm", "--filter", "@workspace/web", "run", "build"]
+
+[services.env]
+PORT = "5173"
+BASE_PATH = "/web/"

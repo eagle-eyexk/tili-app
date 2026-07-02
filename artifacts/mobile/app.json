@@ -15,7 +15,7 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.tiligo.delivery",
+      "bundleIdentifier": "com.tiligo.tiligo",
       "buildNumber": "1",
       "deploymentTarget": "16.0",
       "infoPlist": {
@@ -34,7 +34,7 @@
         "foregroundImage": "./assets/images/logo.jpg",
         "backgroundColor": "#FFFFFF"
       },
-      "package": "com.tiligo.delivery",
+      "package": "com.tiligo.tiligo",
       "versionCode": 1,
       "permissions": [
         "ACCESS_FINE_LOCATION",
